@@ -482,10 +482,6 @@ class Companion:
                 print('[*] Received WPS Message M{}'.format(n))
                 if n == 5:
                     print('[+] The first half of the PIN is valid')
-            elif 'Received WSC_NACK' in line:
-                self.connection_status.status = 'WSC_NACK'
-                print('[*] Received WSC NACK')
-                print('[-] Error: wrong PIN code')
             elif 'Enrollee Nonce' in line and 'hexdump' in line:
                 self.pixie_creds.e_nonce = get_hex(line)
                 assert(len(self.pixie_creds.e_nonce) == 16*2)
@@ -524,8 +520,22 @@ class Companion:
                 self.connection_status.status = 'scanning'
                 print('[*] Scanning…')
         elif ('WPS-FAIL' in line) and (self.connection_status.status != ''):
-            self.connection_status.status = 'WPS_FAIL'
-            print('[-] wpa_supplicant returned WPS-FAIL')
+            print(line)
+            if 'msg=5 config_error=15' in line:
+                print('[*] Received WPS-FAIL with reason: WPS LOCKED')
+                self.connection_status.status = 'WPS_FAIL'
+            elif 'msg=8' in line:
+                if 'config_error=15' in line:
+                    print('[*] Received WPS-FAIL with reason: WPS LOCKED')
+                    self.connection_status.status = 'WPS_FAIL'
+                else:    
+                    self.connection_status.status = 'WSC_NACK'
+                    print('[-] Error: PIN was wrong')
+            elif 'config_error=2' in line:
+                print('[*] Received WPS-FAIL with reason: CRC FAILURE')
+                self.connection_status.status = 'WPS_FAIL'
+            else:
+                self.connection_status.status = 'WPS_FAIL'
 #        elif 'NL80211_CMD_DEL_STATION' in line:
 #            print("[!] Unexpected interference — kill NetworkManager/wpa_supplicant!")
         elif 'Trying to authenticate with' in line:
