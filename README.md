@@ -73,7 +73,7 @@ Optional: getting a list of vulnerable to pixie dust devices for highlighting in
  ```
  sudo wget https://raw.githubusercontent.com/fulvius31/OneShot/master/vulnwsc.txt
  ```
-## [Termux](https://play.google.com/store/apps/details?id=com.termux)
+## [Termux](https://termux.com/)
 Please note that root access is required.  
 
 #### Using installer
@@ -84,7 +84,7 @@ Please note that root access is required.
 **Installing requirements**
  ```
  pkg install -y root-repo
- pkg install -y git tsu python wpa-supplicant pixiewps iw
+ pkg install -y git tsu python wpa-supplicant pixiewps iw openssl
  ```
 **Getting OneShot**
  ```
@@ -116,6 +116,9 @@ Please note that root access is required.
      --vuln-list=<filename>   : Use custom file with vulnerable devices list ['vulnwsc.txt']
      --iface-down             : Down network interface when the work is finished
      -l, --loop               : Run in a loop
+     -r, --reverse-scan       : Reverse order of networks in the list of networks. Useful on small displays
+     --mtk-wifi               : Activate MediaTek Wi-Fi interface driver on startup and deactivate it on exit
+                                (for internal Wi-Fi adapters implemented in MediaTek SoCs). Turn off Wi-Fi in the system settings before using this.
      -v, --verbose            : Verbose output
  ```
 
@@ -143,11 +146,7 @@ Launch online WPS bruteforce with the specified first half of the PIN:
 #### "Device or resource busy (-16)"
  Try disabling Wi-Fi in the system settings and kill the Network manager. Alternatively, you can try running OneShot with ```--iface-down``` argument.
 #### The wlan0 interface disappears when Wi-Fi is disabled on Android devices with MediaTek SoC
- Try run the following:
-```
-sudo chmod 644 /dev/wmtWifi
-sudo sh -c 'echo 1 > /dev/wmtWifi'
-```
+ Try running OneShot with the `--mtk-wifi` flag to initialize Wi-Fi device driver.
 # Acknowledgements
 ## Special Thanks
 * `rofl0r` for initial implementation;
