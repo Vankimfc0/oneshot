@@ -103,7 +103,7 @@ class WPSpin:
                       'pinASUS': {'name': 'ASUS PIN', 'mode': self.ALGO_MAC, 'gen': self.pinASUS},
                       'pinAirocon': {'name': 'Airocon Realtek', 'mode': self.ALGO_MAC, 'gen': self.pinAirocon},
                       # Static pin algos
-                      'pinGeneric': {'name': 'Static', 'mode': self.ALGO_STATIC_DB, 'static': []}}
+                      'pinGeneric': {'name': 'Static', 'mode': self.ALGO_STATIC_DB, 'gen': lambda mac: 1234567, 'static': []}}
 
     @staticmethod
     def checksum(pin):
