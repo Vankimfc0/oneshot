@@ -105,7 +105,8 @@ class WPSpin:
                       'pinEasybox': {'name': 'EasyBox', 'mode': self.ALGO_MAC, 'gen': self.pinEasybox},
                       'pinArris': {'name': 'Arris', 'mode': self.ALGO_MAC, 'gen': self.pinArris},
                       # Static pin algos
-                      'pinGeneric': {'name': 'Static', 'mode': self.ALGO_STATIC_DB, 'gen': lambda mac: 1234567, 'static': []}}
+                      'pinGeneric': {'name': 'Static', 'mode': self.ALGO_STATIC_DB, 'gen': lambda mac: 1234567, 'static': []},
+                      'pinEmpty': {'name': 'Empty PIN', 'mode': self.ALGO_EMPTY, 'gen': lambda mac: ''}}
 
     @staticmethod
     def checksum(pin):
@@ -227,6 +228,7 @@ class WPSpin:
         
         except ValueError:
             return 12345670
+        
     def pinArris(self, bssid):
         def fib_gen(n, memo={}):
             if n in memo:
