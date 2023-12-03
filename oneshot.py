@@ -102,6 +102,7 @@ class WPSpin:
                       'pinDLink1': {'name': 'D-Link PIN +1', 'mode': self.ALGO_MAC, 'gen': self.pinDLink1},
                       'pinASUS': {'name': 'ASUS PIN', 'mode': self.ALGO_MAC, 'gen': self.pinASUS},
                       'pinAirocon': {'name': 'Airocon Realtek', 'mode': self.ALGO_MAC, 'gen': self.pinAirocon},
+                      'pinEasybox': {'name': 'EasyBox', 'mode': self.ALGO_MAC, 'gen': self.pinEasybox},
                       # Static pin algos
                       'pinGeneric': {'name': 'Static', 'mode': self.ALGO_STATIC_DB, 'gen': lambda mac: 1234567, 'static': []}}
 
@@ -130,7 +131,7 @@ class WPSpin:
         if algo not in self.algos:
             raise ValueError('Invalid WPS pin algorithm')
         pin = self.algos[algo]['gen'](mac)
-        if algo == 'pinEmpty':
+        if algo == 'pinEmpty' or algo == 'pinEasybox':
             return pin
         pin = pin % 10000000
         pin = str(pin) + str(self.checksum(pin))
@@ -196,6 +197,36 @@ class WPSpin:
             res.append(algo_id)
 
         return res
+    
+    def pinEasybox(self, bssid):
+        try:
+            last_two = bssid.string.replace(':', '')[-4:]
+            sn = int(last_two, 16)
+            snstr = f"{sn:05d}"
+            
+            mac = [int(c, 16) for c in last_two]
+            sn_digits = [int(c) for c in snstr[1:]]
+
+            k1 = (sum(sn_digits[:2]) + sum(mac[2:])) % 16
+            k2 = (sum(sn_digits[2:]) + sum(mac[:2])) % 16
+
+            hpin = [
+                k1 ^ sn_digits[3],
+                k1 ^ sn_digits[2],
+                k2 ^ mac[1],
+                k2 ^ mac[2],
+                mac[2] ^ sn_digits[3],
+                mac[3] ^ sn_digits[2],
+                k1 ^ sn_digits[1]
+            ]
+
+            hpin_str = ''.join(f"{x:X}" for x in hpin)
+            hpinint = int(hpin_str, 16) % 10000000
+            print (f"{hpinint:07d}{self.checksum(hpinint)}")
+            return f"{hpinint:07d}{self.checksum(hpinint)}"
+        
+        except ValueError:
+            return 12345670
 
     def pin24(self, mac):
         return mac.integer & 0xFFFFFF
