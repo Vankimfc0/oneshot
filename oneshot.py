@@ -104,6 +104,7 @@ class WPSpin:
                       'pinAirocon': {'name': 'Airocon Realtek', 'mode': self.ALGO_MAC, 'gen': self.pinAirocon},
                       'pinEasybox': {'name': 'EasyBox', 'mode': self.ALGO_MAC, 'gen': self.pinEasybox},
                       'pinArris': {'name': 'Arris', 'mode': self.ALGO_MAC, 'gen': self.pinArris},
+                      'pinTrendNet': {'name': 'TrendNet', 'mode': self.ALGO_MAC, 'gen': self.pinTrendNet},
                       # Static pin algos
                       'pinGeneric': {'name': 'Static', 'mode': self.ALGO_STATIC_DB, 'gen': lambda mac: 1234567, 'static': []},
                       'pinEmpty': {'name': 'Empty PIN', 'mode': self.ALGO_EMPTY, 'gen': lambda mac: ''}}
@@ -133,7 +134,8 @@ class WPSpin:
         if algo not in self.algos:
             raise ValueError('Invalid WPS pin algorithm')
         pin = self.algos[algo]['gen'](mac)
-        if algo == 'pinEmpty' or algo == 'pinEasybox' or algo == 'pinArris':
+        new_algos = {'pinEmpty', 'pinEasybox', 'pinArris', 'pinTrendNet'}
+        if algo in new_algos:
             return pin
         pin = pin % 10000000
         pin = str(pin) + str(self.checksum(pin))
@@ -200,6 +202,17 @@ class WPSpin:
 
         return res
     
+    def pinTrendNet(self, bssid):
+        try:
+            last_3 = bssid.string.replace(':', '')[-6:]
+            merge = last_3[4:] + last_3[2:4] + last_3[:2]
+            string = int(merge, 16) % 10000000
+            pin = 10 * string
+            pin_with_checksum = pin + self.checksum(pin)
+            return f"{pin_with_checksum:08d}"
+        except ValueError:
+            return "12345670"
+
     def pinEasybox(self, bssid):
         try:
             last_two = bssid.string.replace(':', '')[-4:]
