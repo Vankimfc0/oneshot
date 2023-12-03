@@ -103,6 +103,7 @@ class WPSpin:
                       'pinASUS': {'name': 'ASUS PIN', 'mode': self.ALGO_MAC, 'gen': self.pinASUS},
                       'pinAirocon': {'name': 'Airocon Realtek', 'mode': self.ALGO_MAC, 'gen': self.pinAirocon},
                       'pinEasybox': {'name': 'EasyBox', 'mode': self.ALGO_MAC, 'gen': self.pinEasybox},
+                      'pinArris': {'name': 'Arris', 'mode': self.ALGO_MAC, 'gen': self.pinArris},
                       # Static pin algos
                       'pinGeneric': {'name': 'Static', 'mode': self.ALGO_STATIC_DB, 'gen': lambda mac: 1234567, 'static': []}}
 
@@ -131,7 +132,7 @@ class WPSpin:
         if algo not in self.algos:
             raise ValueError('Invalid WPS pin algorithm')
         pin = self.algos[algo]['gen'](mac)
-        if algo == 'pinEmpty' or algo == 'pinEasybox':
+        if algo == 'pinEmpty' or algo == 'pinEasybox' or algo == 'pinArris':
             return pin
         pin = pin % 10000000
         pin = str(pin) + str(self.checksum(pin))
@@ -222,11 +223,43 @@ class WPSpin:
 
             hpin_str = ''.join(f"{x:X}" for x in hpin)
             hpinint = int(hpin_str, 16) % 10000000
-            print (f"{hpinint:07d}{self.checksum(hpinint)}")
             return f"{hpinint:07d}{self.checksum(hpinint)}"
         
         except ValueError:
             return 12345670
+    def pinArris(self, bssid):
+        def fib_gen(n, memo={}):
+            if n in memo:
+                return memo[n]
+            if n in (0, 1, 2):
+                return 1
+            memo[n] = fib_gen(n - 1, memo) + fib_gen(n - 2, memo)
+            return memo[n]
+
+        macs = bssid.string.split(":")
+        array_macs = [int(mac, 16) for mac in macs]
+
+        fibnum = []
+        for i, mac in enumerate(array_macs):
+            adjusted_mac = mac
+            counter = 0
+
+            if adjusted_mac > 30:
+                while adjusted_mac > 31:
+                    adjusted_mac -= 16
+                    counter += 1
+
+            if counter == 0 and adjusted_mac < 3:
+                adjusted_mac = sum(array_macs) - adjusted_mac
+                adjusted_mac &= 0xff
+                adjusted_mac = (adjusted_mac % 28) + 3
+
+            fibnum.append(fib_gen(adjusted_mac) + (fib_gen(counter) if counter else 0))
+
+        fibsum = sum(fib * fib_gen(i + 16) for i, fib in enumerate(fibnum)) + sum(array_macs)
+        fibsum = (fibsum % 10000000 * 10) + self.checksum(fibsum)
+
+        return f"{fibsum:08d}"
 
     def pin24(self, mac):
         return mac.integer & 0xFFFFFF
