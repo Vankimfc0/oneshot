@@ -700,7 +700,7 @@ class Companion:
         self.sendOnly('WPS_CANCEL')
         return False
 
-    def single_connection(self, bssid=None, pin=None, pixiemode=False, pbc_mode=False, showpixiecmd=False,
+    def single_connection(self, bssid=None, ssid=None, pin=None, pixiemode=False, pbc_mode=False, showpixiecmd=False,
                           pixieforce=False, store_pin_on_fail=False):
         if not pin:
             if pixiemode:
@@ -1043,7 +1043,7 @@ class WiFiScanner:
 
         return network_list
 
-    def prompt_network(self) -> str:
+    def prompt_network(self) -> tuple:
         networks = self.iw_scanner()
         if not networks:
             print('[-] No WPS networks found.')
@@ -1054,7 +1054,10 @@ class WiFiScanner:
                 if networkNo.lower() in ('r', '0', ''):
                     return self.prompt_network()
                 elif int(networkNo) in networks.keys():
-                    return networks[int(networkNo)]['BSSID']
+                    if networks[int(networkNo)]['ESSID'] is None:
+                        return networks[int(networkNo)]['BSSID']
+                    else:
+                        return networks[int(networkNo)]['BSSID'], networks[int(networkNo)]['ESSID']
                 else:
                     raise IndexError
             except Exception:
@@ -1090,6 +1093,7 @@ Required arguments:
 
 Optional arguments:
     -b, --bssid=<mac>        : BSSID of the target AP
+    -s, --ssid=<ssid>        : SSID of the target AP
     -p, --pin=<wps pin>      : Use the specified pin (arbitrary string or 4/8 digit pin)
     -K, --pixie-dust         : Run Pixie Dust attack
     -B, --bruteforce         : Run online bruteforce attack
@@ -1131,6 +1135,11 @@ if __name__ == '__main__':
         '-b', '--bssid',
         type=str,
         help='BSSID of the target AP'
+        )
+    parser.add_argument(
+        '-s', '--ssid',
+        type=str,
+        help='SSID of the target AP'
         )
     parser.add_argument(
         '-p', '--pin',
@@ -1182,24 +1191,24 @@ if __name__ == '__main__':
         type=str,
         default=os.path.dirname(os.path.realpath(__file__)) + '/vulnwsc.txt',
         help='Use custom file with vulnerable devices list'
-    )
+        )
     parser.add_argument(
         '-l', '--loop',
         action='store_true',
         help='Run in a loop'
-    )
+        )
     parser.add_argument(
         '-r', '--reverse-scan',
         action='store_true',
         help='Reverse order of networks in the list of networks. Useful on small displays'
-    )
+        )
     parser.add_argument(
         '--mtk-wifi',
         action='store_true',
         help='Activate MediaTek Wi-Fi interface driver on startup and deactivate it on exit '
              '(for internal Wi-Fi adapters implemented in MediaTek SoCs). '
              'Turn off Wi-Fi in the system settings before using this.'
-    )
+        )
     parser.add_argument(
         '-v', '--verbose',
         action='store_true',
@@ -1239,14 +1248,23 @@ if __name__ == '__main__':
                     scanner = WiFiScanner(args.interface, vuln_list)
                     if not args.loop:
                         print('[*] BSSID not specified (--bssid) — scanning for available networks')
-                    args.bssid = scanner.prompt_network()
+
+                    network_info = scanner.prompt_network()
+                    if network_info:
+                        args.bssid = network_info[0]
+                        args.ssid = network_info[1] if len(network_info) > 1 else None
+
 
                 if args.bssid:
                     companion = Companion(args.interface, args.write, print_debug=args.verbose)
                     if args.bruteforce:
                         companion.smart_bruteforce(args.bssid, args.pin, args.delay)
                     else:
-                        companion.single_connection(args.bssid, args.pin, args.pixie_dust,
+                        if args.ssid:
+                            companion.single_connection(args.bssid, args.ssid, args.pin, args.pixie_dust,
+                                                    args.show_pixie_cmd, args.pixie_force)
+                        else:
+                            companion.single_connection(args.bssid, args.pin, args.pixie_dust,
                                                     args.show_pixie_cmd, args.pixie_force)
             if not args.loop:
                 break
