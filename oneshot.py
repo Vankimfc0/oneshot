@@ -538,7 +538,6 @@ class Companion:
                 self.connection_status.status = 'scanning'
                 print('[*] Scanning…')
         elif ('WPS-FAIL' in line) and (self.connection_status.status != ''):
-            print(line)
             if 'msg=5 config_error=15' in line:
                 print('[*] Received WPS-FAIL with reason: WPS LOCKED')
                 self.connection_status.status = 'WPS_FAIL'
@@ -1261,11 +1260,11 @@ if __name__ == '__main__':
                         companion.smart_bruteforce(args.bssid, args.pin, args.delay)
                     else:
                         if args.ssid:
-                            companion.single_connection(args.bssid, args.ssid, args.pin, args.pixie_dust,
-                                                    args.show_pixie_cmd, args.pixie_force)
+                            companion.single_connection(bssid=args.bssid, ssid=args.ssid, pin=args.pin, pixiemode=args.pixie_dust,
+                                                    showpixiecmd=args.show_pixie_cmd, pixieforce=args.pixie_force)
                         else:
-                            companion.single_connection(args.bssid, args.pin, args.pixie_dust,
-                                                    args.show_pixie_cmd, args.pixie_force)
+                            companion.single_connection(bssid=args.bssid, pin=args.pin, pixiemode=args.pixie_dust,
+                                                    showpixiecmd=args.show_pixie_cmd, pixieforce=args.pixie_force)
             if not args.loop:
                 break
             else:
