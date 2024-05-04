@@ -179,14 +179,14 @@ class WPSpin:
             return res[0]
         else:
             return None
-        
+
     def append_from_pin_csv(self, pin_file_path, mac):
         with open(pin_file_path, newline='') as csvfile:
             reader = csv.reader(csvfile)
             for row in reader:
                 if  mac.startswith(row[1]):
                     self.algos['pinGeneric']['static'].append(row[0])
-                
+
     def _suggest(self, mac):
         """
         Get algos suggestions for single MAC
@@ -194,14 +194,13 @@ class WPSpin:
         The static pins will be added only if they are included in the csv for that specific mac
         Returns the algo ID
         """
-        self.append_from_pin_csv('./pins.csv', mac.upper())
-        
+        self.append_from_pin_csv(os.path.join(os.path.dirname(os.path.realpath(__file__)), 'pins.csv'), mac.upper())
         res = []
         for algo_id in self.algos:
             res.append(algo_id)
 
         return res
-    
+
     def pinTrendNet(self, bssid):
         try:
             last_3 = bssid.string.replace(':', '')[-6:]
@@ -218,7 +217,7 @@ class WPSpin:
             last_two = bssid.string.replace(':', '')[-4:]
             sn = int(last_two, 16)
             snstr = f"{sn:05d}"
-            
+
             mac = [int(c, 16) for c in last_two]
             sn_digits = [int(c) for c in snstr[1:]]
 
@@ -238,10 +237,10 @@ class WPSpin:
             hpin_str = ''.join(f"{x:X}" for x in hpin)
             hpinint = int(hpin_str, 16) % 10000000
             return f"{hpinint:07d}{self.checksum(hpinint)}"
-        
+
         except ValueError:
             return 12345670
-        
+
     def pinArris(self, bssid):
         def fib_gen(n, memo={}):
             if n in memo:
@@ -545,7 +544,7 @@ class Companion:
                 if 'config_error=15' in line:
                     print('[*] Received WPS-FAIL with reason: WPS LOCKED')
                     self.connection_status.status = 'WPS_FAIL'
-                else:    
+                else:
                     self.connection_status.status = 'WSC_NACK'
                     print('[-] Error: PIN was wrong')
             elif 'config_error=2' in line:
@@ -877,7 +876,7 @@ class WiFiScanner:
             for row in reader:
                 if  mac.startswith(row[1]):
                     return True
-                
+
     def iw_scanner(self) -> Dict[int, dict]:
         """Parsing iw scan results"""
         def handle_network(line, result, networks):
