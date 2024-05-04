@@ -1034,7 +1034,7 @@ class WiFiScanner:
                 print(colored(line, color='yellow'))
             elif network['WPS locked']:
                 print(colored(line, color='red'))
-            elif (self.vuln_list and (model in self.vuln_list)) or self.checkvuln_from_pin_csv("./pins.csv", network['BSSID']):
+            elif (self.vuln_list and (model in self.vuln_list)) or self.checkvuln_from_pin_csv(os.path.join(os.path.dirname(os.path.realpath(__file__)), 'pins.csv'), network['BSSID']):
                 print(colored(line, color='green'))
             else:
                 print(line)
