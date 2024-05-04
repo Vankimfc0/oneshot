@@ -13,7 +13,6 @@ import time
 from datetime import datetime
 import collections
 import statistics
-import csv
 from pathlib import Path
 from typing import Dict
 import csv
@@ -557,14 +556,16 @@ class Companion:
         elif 'Trying to authenticate with' in line:
             self.connection_status.status = 'authenticating'
             if 'SSID' in line:
-                self.connection_status.essid = codecs.decode("'".join(line.split("'")[1:-1]), 'unicode-escape').encode('latin1').decode('utf-8', errors='replace')
+                self.connection_status.essid = (codecs.decode("'".join(line.split("'")[1:-1]), 'unicode-escape')
+                                                .encode('latin1').decode('utf-8', errors='replace'))
             print('[*] Authenticating…')
         elif 'Authentication response' in line:
             print('[+] Authenticated')
         elif 'Trying to associate with' in line:
             self.connection_status.status = 'associating'
             if 'SSID' in line:
-                self.connection_status.essid = codecs.decode("'".join(line.split("'")[1:-1]), 'unicode-escape').encode('latin1').decode('utf-8', errors='replace')
+                self.connection_status.essid = (codecs.decode("'".join(line.split("'")[1:-1]), 'unicode-escape')
+                                                .encode('latin1').decode('utf-8', errors='replace'))
             print('[*] Associating with AP…')
         elif ('Associated with' in line) and (self.interface in line):
             bssid = line.split()[-1].upper()
@@ -894,7 +895,8 @@ class WiFiScanner:
 
         def handle_essid(line, result, networks):
             d = result.group(1)
-            networks[-1]['ESSID'] = codecs.decode(d, 'unicode-escape').encode('latin1').decode('utf-8', errors='replace')
+            networks[-1]['ESSID'] = (codecs.decode(d, 'unicode-escape')
+                                     .encode('latin1').decode('utf-8', errors='replace'))
 
         def handle_level(line, result, networks):
             networks[-1]['Level'] = int(float(result.group(1)))
@@ -929,15 +931,18 @@ class WiFiScanner:
 
         def handle_model(line, result, networks):
             d = result.group(1)
-            networks[-1]['Model'] = codecs.decode(d, 'unicode-escape').encode('latin1').decode('utf-8', errors='replace')
+            networks[-1]['Model'] = (codecs.decode(d, 'unicode-escape')
+                                     .encode('latin1').decode('utf-8', errors='replace'))
 
         def handle_modelNumber(line, result, networks):
             d = result.group(1)
-            networks[-1]['Model number'] = codecs.decode(d, 'unicode-escape').encode('latin1').decode('utf-8', errors='replace')
+            networks[-1]['Model number'] = (codecs.decode(d, 'unicode-escape')
+                                            .encode('latin1').decode('utf-8', errors='replace'))
 
         def handle_deviceName(line, result, networks):
             d = result.group(1)
-            networks[-1]['Device name'] = codecs.decode(d, 'unicode-escape').encode('latin1').decode('utf-8', errors='replace')
+            networks[-1]['Device name'] = (codecs.decode(d, 'unicode-escape')
+                                           .encode('latin1').decode('utf-8', errors='replace'))
 
         cmd = 'iw dev {} scan'.format(self.interface)
         proc = subprocess.run(cmd, shell=True, stdout=subprocess.PIPE,
@@ -1034,7 +1039,9 @@ class WiFiScanner:
                 print(colored(line, color='yellow'))
             elif network['WPS locked']:
                 print(colored(line, color='red'))
-            elif (self.vuln_list and (model in self.vuln_list)) or self.checkvuln_from_pin_csv(os.path.join(os.path.dirname(os.path.realpath(__file__)), 'pins.csv'), network['BSSID']):
+            elif ((self.vuln_list and (model in self.vuln_list))
+                  or self.checkvuln_from_pin_csv(os.path.join(os.path.dirname(os.path.realpath(__file__)),
+                                                              'pins.csv'), network['BSSID'])):
                 print(colored(line, color='green'))
             else:
                 print(line)
@@ -1082,7 +1089,7 @@ def die(msg):
 
 def usage():
     return """
-OneShotPin 0.0.2 (c) 2017 rofl0r and drygdryg, modded by fulvius31
+OneShotPin 0.0.2 (c) 2017 rofl0r, drygdryg and fulvius31
 
 %(prog)s <arguments>
 
@@ -1119,7 +1126,7 @@ if __name__ == '__main__':
     import argparse
 
     parser = argparse.ArgumentParser(
-        description='OneShotPin 0.0.2 (c) 2017 rofl0r and drygdryg, modded by fulvius31',
+        description='OneShotPin 0.0.2 (c) 2017 rofl0r, drygdryg and fulvius31',
         epilog='Example: %(prog)s -i wlan0 -b 00:90:4C:C1:AC:21 -K'
         )
 
@@ -1251,19 +1258,14 @@ if __name__ == '__main__':
                     if network_info:
                         args.bssid = network_info[0]
                         args.ssid = network_info[1] if len(network_info) > 1 else None
-
-
                 if args.bssid:
                     companion = Companion(args.interface, args.write, print_debug=args.verbose)
                     if args.bruteforce:
                         companion.smart_bruteforce(args.bssid, args.pin, args.delay)
                     else:
-                        if args.ssid:
-                            companion.single_connection(bssid=args.bssid, ssid=args.ssid, pin=args.pin, pixiemode=args.pixie_dust,
-                                                    showpixiecmd=args.show_pixie_cmd, pixieforce=args.pixie_force)
-                        else:
-                            companion.single_connection(bssid=args.bssid, pin=args.pin, pixiemode=args.pixie_dust,
-                                                    showpixiecmd=args.show_pixie_cmd, pixieforce=args.pixie_force)
+                        companion.single_connection(bssid=args.bssid, ssid=args.ssid, pin=args.pin,
+                                                    pixiemode=args.pixie_dust,showpixiecmd=args.show_pixie_cmd,
+                                                    pixieforce=args.pixie_force)
             if not args.loop:
                 break
             else:
