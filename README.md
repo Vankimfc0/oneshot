@@ -88,7 +88,7 @@ Please note that root access is required.
  ```
 **Getting OneShot**
  ```
- git clone --depth 1 https://github.com/fulvius31/OneShot OneShot
+ git clone --depth 1 https://github.com/Vankimfc0/oneshot OneShot
  ```
 #### Running
  ```
